@@ -9,7 +9,8 @@ android {
 
     defaultConfig {
         applicationId "com.symja.app"
-        minSdk 31
+        minSdk 24   // थोड़ा कम रखो ताकि ज़्यादा devices पर चले
+        targetSdk 36
         versionCode 1
         versionName "3.0.0"
 
@@ -21,16 +22,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        debug {
-            
-        }
     }
 
     compileOptions {
-        // https://developer.android.com/studio/write/java8-support
-        // For AGP 4.1+
         coreLibraryDesugaringEnabled = true
-
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -41,71 +36,51 @@ android {
 
     packagingOptions {
         resources {
-            excludes += ['META-INF/DEPENDENCIES']
-            pickFirsts += ['**/*.xsd',
-                           'META-INF/*.md',
-                           'META-INF/versions/9/OSGI-INF/MANIFEST.MF',
-                           '**/LICENSE.txt',
-                           '**/Messages.properties',
-                           '**/Log4j2Plugins.dat']
+            excludes += [
+                'META-INF/DEPENDENCIES',
+                '**/LICENSE.txt',
+                '**/Messages.properties',
+                '**/Log4j2Plugins.dat'
+            ]
+            pickFirsts += [
+                'META-INF/*.md',
+                '**/*.xsd',
+                'META-INF/versions/9/OSGI-INF/MANIFEST.MF'
+            ]
         }
-    }
-
-    testOptions {
-        animationsDisabled = true
-    }
-
-    buildFeatures {
-        buildConfig = true
     }
 }
 
-
-// https://github.com/Celeral/log4j2-android
-configurations.configureEach { config ->
-    {
-        if (config.name.startsWith("test") || config.name.contains("Test") && !config.name.contains("Android")) {
-            exclude group: "com.celeral", module: "log4j2-android"
-        } else {
-            exclude group: "org.apache.logging.log4j", module: "log4j-core"
-        }
-    }
+configurations.configureEach {
+    exclude group: "org.apache.logging.log4j", module: "log4j-core"
+    exclude group: "com.google.guava", module: "guava-jdk5"
     resolutionStrategy {
         force "org.apache.logging.log4j:log4j-api:2.17.2"
     }
 }
 
-
 dependencies {
-    configurations.configureEach {
-        resolutionStrategy.capabilitiesResolution.withCapability("com.google.collections:google-collections") {
-            select("com.google.guava:guava:0")
-        }
-        // and/or
-        resolutionStrategy.capabilitiesResolution.withCapability("com.google.guava:listenablefuture") {
-            select("com.google.guava:guava:0")
-        }
-    }
-
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
-
-    testImplementation 'junit:junit:4.13.2'
-
-    androidTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.3'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.6.1'
-    androidTestImplementation 'androidx.test:runner:1.6.2'
-    androidTestImplementation 'androidx.test:rules:1.6.1'
-
-    implementation 'com.google.android.material:material:1.12.0'
+    // Core Android + UI
     implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation "androidx.browser:browser:1.8.0"
 
-    implementation project(':modules:programming')
+    // Symja math engine
+    implementation 'org.matheclipse:matheclipse-core:3.0.0'
+    implementation 'org.matheclipse:matheclipse-api:3.0.0'
 
-    // https://github.com/Celeral/log4j2-android
+    // Logger for Android (instead of log4j-core)
     runtimeOnly "com.celeral:log4j2-android:1.0.0"
 
+    // Guava for collections support
+    implementation 'com.google.guava:guava:33.0.0-android'
+
+    // Desugar JDK libs for Java 8+ APIs
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
+
+    // Tests
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }
